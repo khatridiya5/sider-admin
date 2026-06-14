@@ -79,6 +79,21 @@ export default function Licenses() {
     }
   }
 
+  const activate = async (key) => {
+    if (!confirm('Reactivate this license?')) return
+    setError('')
+    try {
+      const res = await api.activateLicense(key)
+      if (res.status !== 'ok') {
+        setError(res.detail || 'Failed to activate license')
+        return
+      }
+      await fetchLicenses()
+    } catch (e) {
+      setError('Network error while activating license: ' + e.message)
+    }
+  }
+
   const copy = (key) => {
     navigator.clipboard.writeText(key)
     setCopied(key)
@@ -219,12 +234,17 @@ export default function Licenses() {
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    {l.status === 'active' && (
+                    {l.status === 'active' ? (
                       <button onClick={() => revoke(l.license_key)}
                         className="text-red-400 hover:text-red-300 text-xs">
                         Revoke
                       </button>
-                    )}
+                    ) : l.status === 'revoked' ? (
+                      <button onClick={() => activate(l.license_key)}
+                        className="text-green-400 hover:text-green-300 text-xs">
+                        Activate
+                      </button>
+                    ) : null}
                   </td>
                 </tr>
               ))}

@@ -23,6 +23,13 @@ export const api = {
     return res.json()
   },
 
+  activateLicense: async (licenseKey) => {
+    const res = await fetch(`${BASE}/api/license/admin/activate/${licenseKey}`, {
+      method: "POST"
+    })
+    return res.json()
+  },
+
   // Clients (companies + admin accounts)
   getClients: async () => {
     const res = await fetch(`${BASE}/api/admin/clients`)
