@@ -278,6 +278,7 @@ export default function Clients() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-800 text-gray-500 text-left">
+                <th className="px-5 py-3">ID</th>
                 <th className="px-5 py-3">Company</th>
                 <th className="px-5 py-3">GSTIN</th>
                 <th className="px-5 py-3">State</th>
@@ -290,6 +291,7 @@ export default function Clients() {
                 const admin = c.admins?.[0]
                 return (
                   <tr key={c.id} className="border-b border-gray-800 last:border-0">
+                    <td className="px-5 py-3 text-gray-400">{c.id}</td>
                     <td className="px-5 py-3 text-white">{c.name}</td>
                     <td className="px-5 py-3 text-gray-400">
                       <code className="text-xs">{c.gstin}</code>
@@ -312,7 +314,7 @@ export default function Clients() {
                 )
               })}
               {clients.length === 0 && (
-                <tr><td colSpan={5} className="px-5 py-8 text-center text-gray-600">No clients yet</td></tr>
+                <tr><td colSpan={6} className="px-5 py-8 text-center text-gray-600">No clients yet</td></tr>
               )}
             </tbody>
           </table>
