@@ -84,6 +84,14 @@ export default function Clients() {
       setError('Admin password must be at least 8 characters')
       return
     }
+    if (form.gstin.length !== 15) {
+      setError('GSTIN must be exactly 15 characters')
+      return
+    }
+    if (form.pan && form.pan.length !== 10) {
+      setError('PAN must be exactly 10 characters')
+      return
+    }
 
     try {
       const res = await api.createClient({
@@ -110,7 +118,13 @@ export default function Clients() {
         setShowForm(false)
         fetchClients()
       } else {
-        setError(res.detail || 'Failed to create client')
+        let msg = 'Failed to create client'
+        if (typeof res.detail === 'string') {
+          msg = res.detail
+        } else if (Array.isArray(res.detail)) {
+          msg = res.detail.map(d => `${d.loc?.slice(-1)[0]}: ${d.msg}`).join('; ')
+        }
+        setError(msg)
       }
     } catch (e) {
       setError('Network error: ' + e.message)
@@ -179,7 +193,8 @@ export default function Clients() {
             />
             <input
               className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm outline-none focus:border-green-500"
-              placeholder="GSTIN *"
+              placeholder="GSTIN * (15 characters)"
+              maxLength={15}
               value={form.gstin}
               onChange={e => setForm({ ...form, gstin: e.target.value.toUpperCase() })}
             />
@@ -195,7 +210,8 @@ export default function Clients() {
             </select>
             <input
               className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm outline-none focus:border-green-500"
-              placeholder="PAN"
+              placeholder="PAN (10 characters)"
+              maxLength={10}
               value={form.pan}
               onChange={e => setForm({ ...form, pan: e.target.value.toUpperCase() })}
             />
