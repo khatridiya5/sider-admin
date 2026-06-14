@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Copy, X } from 'lucide-react'
+import { Plus, Copy, X, Eye, EyeOff } from 'lucide-react'
 import { api } from '../api'
 
 function generateKey() {
@@ -11,7 +11,15 @@ export default function Licenses() {
   const [licenses, setLicenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ company_id: '', machines: 2, expiry: '', key: generateKey() })
+  const [form, setForm] = useState({
+    company_id: '',
+    machines: 2,
+    expiry: '',
+    key: generateKey(),
+    allowed_username: '',   // ✅ NEW
+    allowed_password: '',   // ✅ NEW
+  })
+  const [showPassword, setShowPassword] = useState(false)  // ✅ NEW
   const [copied, setCopied] = useState(null)
   const [error, setError] = useState('')
 
@@ -29,17 +37,27 @@ export default function Licenses() {
   useEffect(() => { fetchLicenses() }, [])
 
   const add = async () => {
-    if (!form.company_id || !form.expiry) return
+    // ✅ NEW: validate username/password too
+    if (!form.company_id || !form.expiry || !form.allowed_username || !form.allowed_password) {
+      setError('All fields including username and password are required')
+      return
+    }
+    if (form.allowed_password.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
     setError('')
     const res = await api.createLicense({
       company_id: parseInt(form.company_id),
       license_key: form.key,
       max_devices: form.machines,
-      valid_until: form.expiry
+      valid_until: form.expiry,
+      allowed_username: form.allowed_username,   // ✅ NEW
+      allowed_password: form.allowed_password,   // ✅ NEW
     })
     if (res.status === 'ok') {
       setShowForm(false)
-      setForm({ company_id: '', machines: 2, expiry: '', key: generateKey() })
+      setForm({ company_id: '', machines: 2, expiry: '', key: generateKey(), allowed_username: '', allowed_password: '' })
       fetchLicenses()
     } else {
       setError(res.detail || 'Failed to create license')
@@ -115,7 +133,37 @@ export default function Licenses() {
               <button onClick={() => setForm({ ...form, key: generateKey() })}
                 className="text-gray-500 hover:text-white text-xs">↻</button>
             </div>
+
+            {/* ✅ NEW: credential fields */}
+            <input
+              className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm outline-none focus:border-green-500"
+              placeholder="Login Username for this license"
+              value={form.allowed_username}
+              onChange={e => setForm({ ...form, allowed_username: e.target.value })}
+            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm outline-none focus:border-green-500 pr-10"
+                placeholder="Login Password for this license"
+                value={form.allowed_password}
+                onChange={e => setForm({ ...form, allowed_password: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              >
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
           </div>
+
+          {/* ✅ hint text */}
+          <p className="text-gray-600 text-xs mb-3">
+            Only this username + password will work when logging in with this license key.
+          </p>
+
           {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
           <button onClick={add}
             className="bg-green-500 hover:bg-green-400 text-black font-semibold px-6 py-2 rounded-lg text-sm">
@@ -124,7 +172,7 @@ export default function Licenses() {
         </div>
       )}
 
-      {error && (
+      {error && !showForm && (
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-4">
           {error}
         </div>
