@@ -21,5 +21,27 @@ export const api = {
       method: "POST"
     })
     return res.json()
+  },
+
+  // Clients (companies + admin accounts)
+  getClients: async () => {
+    const res = await fetch(`${BASE}/api/admin/clients`)
+    return res.json()
+  },
+
+  createClient: async (data) => {
+    const res = await fetch(`${BASE}/api/admin/clients`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    })
+    return res.json()
+  },
+
+  toggleClientAdmin: async (userId) => {
+    const res = await fetch(`${BASE}/api/admin/clients/${userId}/toggle-active`, {
+      method: "PATCH"
+    })
+    return res.json()
   }
 }
