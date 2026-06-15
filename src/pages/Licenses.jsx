@@ -22,6 +22,8 @@ export default function Licenses() {
   const [showPassword, setShowPassword] = useState(false)  // ✅ NEW
   const [copied, setCopied] = useState(null)
   const [error, setError] = useState('')
+  const [renewKey, setRenewKey] = useState(null)
+  const [renewDate, setRenewDate] = useState('')
 
   const fetchLicenses = async () => {
     setLoading(true)
@@ -93,6 +95,26 @@ export default function Licenses() {
       setError('Network error while activating license: ' + e.message)
     }
   }
+
+  const renew = async () => {
+  if (!renewDate) {
+    setError('Please select a new expiry date')
+    return
+  }
+  setError('')
+  try {
+    const res = await api.renewLicense(renewKey, renewDate)
+    if (res.status !== 'ok') {
+      setError(res.detail || 'Failed to renew license')
+      return
+    }
+    setRenewKey(null)
+    setRenewDate('')
+    await fetchLicenses()
+  } catch (e) {
+    setError('Network error while renewing license: ' + e.message)
+  }
+}
 
   const copy = (key) => {
     navigator.clipboard.writeText(key)
@@ -233,7 +255,7 @@ export default function Licenses() {
                       {l.status === 'revoked' ? 'Revoked' : isExpired(l.valid_until) ? 'Expired' : 'Active'}
                     </span>
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-5 py-3 flex items-center gap-2">
                     {l.status === 'active' ? (
                       <button onClick={() => revoke(l.license_key)}
                         className="text-red-400 hover:text-red-300 text-xs">
@@ -245,6 +267,12 @@ export default function Licenses() {
                         Activate
                       </button>
                     ) : null}
+                    {isExpired(l.valid_until) && (
+                      <button onClick={() => { setRenewKey(l.license_key); setRenewDate(l.valid_until); setError('') }}
+                        className="text-blue-400 hover:text-blue-300 text-xs">
+                        Renew
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -255,6 +283,33 @@ export default function Licenses() {
           </table>
         )}
       </div>
+
+      {renewKey && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 w-80">
+            <h3 className="text-white font-semibold mb-3">Renew License</h3>
+            <code className="text-green-400 text-xs block mb-3">{renewKey}</code>
+            <input
+              type="date"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm outline-none focus:border-green-500 mb-3"
+              value={renewDate}
+              onChange={e => setRenewDate(e.target.value)}
+            />
+            {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+            <div className="flex gap-2">
+              <button onClick={renew}
+                className="bg-green-500 hover:bg-green-400 text-black font-semibold px-4 py-2 rounded-lg text-sm flex-1">
+                Renew
+              </button>
+              <button onClick={() => { setRenewKey(null); setError('') }}
+                className="bg-gray-800 text-gray-300 px-4 py-2 rounded-lg text-sm">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      
+      )}
     </div>
   )
 }

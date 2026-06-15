@@ -30,6 +30,16 @@ export const api = {
     return res.json()
   },
 
+
+  renewLicense: async (licenseKey, validUntil) => {
+    const res = await fetch(`${BASE}/api/license/admin/renew/${licenseKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ valid_until: validUntil })
+    })
+    return res.json()
+  },
+
   // Clients (companies + admin accounts)
   getClients: async () => {
     const res = await fetch(`${BASE}/api/admin/clients`)
